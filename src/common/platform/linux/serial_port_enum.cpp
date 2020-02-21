@@ -35,8 +35,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <libudev.h>
-
 #include <vector>
 #include <cstring>
 #include <cassert>
@@ -58,63 +56,6 @@ std::list<SerialPortDesc> EnumSerialPorts()
 {
     // Setup return value
     std::list<SerialPortDesc> devices;
-
-    // Setup udev related variables
-    struct udev *udev_ctx = udev_new();
-    assert(udev_ctx != NULL); // NOLINT(modernize-use-nullptr)
-
-    struct udev_enumerate *udev_enum = udev_enumerate_new(udev_ctx);
-    assert(udev_enum != NULL); // NOLINT(modernize-use-nullptr)
-
-    udev_enumerate_add_match_subsystem(udev_enum, "tty");
-    udev_enumerate_scan_devices(udev_enum);
-
-    struct udev_list_entry *udev_devices = udev_enumerate_get_list_entry(udev_enum);
-    struct udev_list_entry *udev_entry;
-    struct udev_device *udev_tty_dev, *udev_usb_dev;
-
-    udev_list_entry_foreach(udev_entry, udev_devices)
-    {
-        const char *path = udev_list_entry_get_name(udev_entry);
-
-        udev_tty_dev = udev_device_new_from_syspath(udev_ctx, path);
-        const char *devname = udev_device_get_devnode(udev_tty_dev);
-
-        udev_usb_dev = udev_device_get_parent_with_subsystem_devtype(
-            udev_tty_dev,
-            "usb",
-            "usb_device"
-        );
-
-        std::string idVendor = to_str(udev_device_get_sysattr_value(udev_usb_dev, "idVendor"));
-        std::string manufacturer = to_str(udev_device_get_sysattr_value(udev_usb_dev,"manufacturer"));
-
-        if(
-          ((idVendor == SEGGER_VENDOR_ID) || (idVendor == NXP_VENDOR_ID))
-          && ((manufacturer == "SEGGER")
-              || (strncasecmp(manufacturer.c_str(), "arm", 3) == 0)
-              || (strncasecmp(manufacturer.c_str(), "mbed", 4) == 0))
-          )
-        {
-            std::string serialNumber = to_str(udev_device_get_sysattr_value(udev_usb_dev, "serial"));
-            std::string idProduct = to_str(udev_device_get_sysattr_value(udev_usb_dev, "idProduct"));
-
-            devices.push_back(SerialPortDesc {
-              devname,
-              manufacturer,
-              serialNumber,
-              "",
-              path,
-              idVendor,
-              idProduct
-            });
-        }
-
-        udev_device_unref(udev_tty_dev);
-    }
-
-    udev_enumerate_unref(udev_enum);
-    udev_unref(udev_ctx);
 
     return devices;
 }
