@@ -64,7 +64,7 @@
 
 
 /** Definitions */
-#define DEFAULT_BAUD_RATE 1000000 /**< The baud rate to be used for serial communication with nRF5 device. */
+#define DEFAULT_BAUD_RATE 9600 /**< The baud rate to be used for serial communication with nRF5 device. */
 
 #ifdef _WIN32
 #define DEFAULT_UART_PORT_NAME "COM1"
